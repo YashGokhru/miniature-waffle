@@ -137,7 +137,7 @@ python youtube_trends.py \
 
 ## Output Format
 
-The tool outputs JSON with the following structure:
+The tool outputs JSON with the following structure (see `example_output.json` for a complete example):
 
 ```json
 {

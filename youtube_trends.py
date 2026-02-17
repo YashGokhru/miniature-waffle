@@ -16,7 +16,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -248,7 +248,7 @@ def main():
     # Calculate published_after if --days is specified
     published_after = args.published_after
     if args.days:
-        days_ago = datetime.utcnow() - timedelta(days=args.days)
+        days_ago = datetime.now(timezone.utc) - timedelta(days=args.days)
         published_after = days_ago.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     # Initialize scraper
@@ -273,7 +273,7 @@ def main():
             result = {
                 'query': query,
                 'region': args.region,
-                'generated_at': datetime.utcnow().isoformat() + 'Z',
+                'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 'items': videos
             }
             results.append(result)
@@ -286,7 +286,7 @@ def main():
     output_data = {
         'searches': results,
         'metadata': {
-            'generated_at': datetime.utcnow().isoformat() + 'Z',
+            'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
             'queries': queries,
             'region': args.region,
             'max_results_per_query': args.max_results,

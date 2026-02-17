@@ -7,7 +7,7 @@ These tests use mocked API responses and do not require real API keys or network
 import pytest
 import json
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch, MagicMock
 from youtube_trends import (
     YouTubeTrendsScraper,
@@ -349,7 +349,7 @@ class TestMainFunction:
                     mock_youtube.videos().list().execute.return_value = {'items': []}
                     
                     # Capture the datetime when test runs
-                    before_time = datetime.utcnow() - timedelta(days=7)
+                    before_time = datetime.now(timezone.utc) - timedelta(days=7)
                     
                     main()
                     
@@ -359,7 +359,7 @@ class TestMainFunction:
                     
                     # Parse and verify it's approximately 7 days ago
                     published_after_str = call_kwargs['publishedAfter']
-                    published_after_dt = datetime.strptime(published_after_str, '%Y-%m-%dT%H:%M:%SZ')
+                    published_after_dt = datetime.strptime(published_after_str, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
                     
                     # Should be within a few seconds of 7 days ago
                     time_diff = abs((published_after_dt - before_time).total_seconds())

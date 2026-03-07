@@ -1,0 +1,41 @@
+{
+  "searches": [
+    {
+      "query": "AI",
+      "region": "US",
+      "generated_at": "2024-02-17T12:00:00.000000Z",
+      "items": [
+        {
+          "id": "abc123xyz",
+          "title": "Understanding Artificial Intelligence in 2024",
+          "channelTitle": "Tech Explained",
+          "publishedAt": "2024-02-10T10:00:00Z",
+          "url": "https://www.youtube.com/watch?v=abc123xyz",
+          "viewCount": 1000000,
+          "likeCount": 50000,
+          "commentCount": 2500
+        },
+        {
+          "id": "def456uvw",
+          "title": "AI Revolution: What's Next?",
+          "channelTitle": "Future Tech",
+          "publishedAt": "2024-02-12T14:30:00Z",
+          "url": "https://www.youtube.com/watch?v=def456uvw",
+          "viewCount": 750000,
+          "likeCount": 35000,
+          "commentCount": 1800
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "generated_at": "2024-02-17T12:00:00.000000Z",
+    "queries": [
+      "AI"
+    ],
+    "region": "US",
+    "max_results_per_query": 25,
+    "published_after": "2024-02-10T00:00:00Z",
+    "order": "relevance"
+  }
+}

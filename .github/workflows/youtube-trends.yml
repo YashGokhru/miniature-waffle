@@ -1,0 +1,109 @@
+name: YouTube Trends Scraper
+
+on:
+  # Run daily at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      queries:
+        description: 'Comma-separated list of keywords to search'
+        required: false
+        default: 'AI,technology,programming'
+      region:
+        description: 'Region code (e.g., US, IN, GB)'
+        required: false
+        default: 'US'
+      max_results:
+        description: 'Maximum results per query'
+        required: false
+        default: '25'
+      days:
+        description: 'Limit to videos from last N days'
+        required: false
+        default: '7'
+
+env:
+  # Default queries for scheduled runs (can be overridden by workflow_dispatch inputs)
+  DEFAULT_QUERIES: 'AI,technology,programming,science'
+  DEFAULT_REGION: 'US'
+  DEFAULT_MAX_RESULTS: '25'
+  DEFAULT_DAYS: '7'
+
+jobs:
+  scrape-trends:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Set query parameters
+        id: params
+        run: |
+          # Use workflow inputs if available, otherwise use defaults
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            QUERIES="${{ github.event.inputs.queries }}"
+            REGION="${{ github.event.inputs.region }}"
+            MAX_RESULTS="${{ github.event.inputs.max_results }}"
+            DAYS="${{ github.event.inputs.days }}"
+          else
+            QUERIES="${DEFAULT_QUERIES}"
+            REGION="${DEFAULT_REGION}"
+            MAX_RESULTS="${DEFAULT_MAX_RESULTS}"
+            DAYS="${DEFAULT_DAYS}"
+          fi
+          
+          echo "queries=${QUERIES}" >> $GITHUB_OUTPUT
+          echo "region=${REGION}" >> $GITHUB_OUTPUT
+          echo "max_results=${MAX_RESULTS}" >> $GITHUB_OUTPUT
+          echo "days=${DAYS}" >> $GITHUB_OUTPUT
+      
+      - name: Run YouTube Trends Scraper
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python youtube_trends.py \
+            --query "${{ steps.params.outputs.queries }}" \
+            --region "${{ steps.params.outputs.region }}" \
+            --max-results ${{ steps.params.outputs.max_results }} \
+            --days ${{ steps.params.outputs.days }} \
+            --out youtube_trends_output.json
+      
+      - name: Upload results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: youtube-trends-${{ steps.params.outputs.region }}-${{ github.run_number }}
+          path: youtube_trends_output.json
+          retention-days: 90
+      
+      - name: Display summary
+        run: |
+          echo "## YouTube Trends Scraper Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Queries**: ${{ steps.params.outputs.queries }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: ${{ steps.params.outputs.region }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Max Results**: ${{ steps.params.outputs.max_results }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Days**: ${{ steps.params.outputs.days }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count total videos found
+          if [ -f youtube_trends_output.json ]; then
+            TOTAL_VIDEOS=$(python -c "import json; data=json.load(open('youtube_trends_output.json')); print(sum(len(s['items']) for s in data['searches']))")
+            echo "- **Total Videos Found**: ${TOTAL_VIDEOS}" >> $GITHUB_STEP_SUMMARY
+          fi
